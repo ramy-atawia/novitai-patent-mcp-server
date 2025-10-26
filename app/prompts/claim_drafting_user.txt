@@ -1,0 +1,22 @@
+USER QUERY:
+{user_query}
+
+CONVERSATION CONTEXT:
+{conversation_context}
+
+DOCUMENT REFERENCE:
+{document_reference}
+
+TASK: Draft patent claims based on the user query above.
+
+Generate a markdown document with patent claims that:
+- Cover the invention described in the user query
+- Use proper patent terminology and structure
+- Include both independent and dependent claims
+- Focus on technical details and novel aspects
+
+Return the complete markdown document.
+
+
+
+

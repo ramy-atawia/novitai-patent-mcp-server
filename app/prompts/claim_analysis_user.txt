@@ -1,0 +1,17 @@
+Analyze the following patent claims for validity, quality, and improvement opportunities:
+
+{claims_text}
+
+Analysis Type: {analysis_type}
+Focus Areas: {focus_areas}
+
+Provide comprehensive analysis covering:
+1. Claim structure and dependencies
+2. Validity assessment (35 USC 101, 112, 103, 102)
+3. Quality evaluation (clarity, breadth, defensibility)
+4. Improvement recommendations
+5. Risk assessment and mitigation strategies
+
+
+
+

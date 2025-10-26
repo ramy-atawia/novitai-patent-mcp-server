@@ -1,0 +1,153 @@
+# Azure Container Apps deployment configuration
+# Deploy: az deployment group create --resource-group <rg> --template-file azure-container-apps.yml --parameters @parameters.json
+
+apiVersion: 2021-03-01
+kind: Template
+parameters:
+  environment:
+    type: string
+    defaultValue: dev
+    allowedValues:
+      - dev
+      - staging
+      - prod
+  location:
+    type: string
+    defaultValue: East US 2
+  resourceGroupName:
+    type: string
+  containerAppsEnvironmentName:
+    type: string
+    defaultValue: novitai-patent-mcp-env
+  mcpAppName:
+    type: string
+    defaultValue: novitai-patent-mcp
+  containerRegistryName:
+    type: string
+  azureOpenAIApiKey:
+    type: securestring
+  azureOpenAIEndpoint:
+    type: string
+  googleApiKey:
+    type: securestring
+  googleCSEId:
+    type: string
+  patentsViewApiKey:
+    type: securestring
+    defaultValue: ''
+  secretKey:
+    type: securestring
+
+variables:
+  environmentSuffix: '[if(equals(parameters(''environment''), ''prod''), '''', concat(''-'', parameters(''environment'')))]'
+  fullMcpAppName: '[concat(parameters(''mcpAppName''), variables(''environmentSuffix''))]'
+  fullEnvironmentName: '[concat(parameters(''containerAppsEnvironmentName''), variables(''environmentSuffix''))]'
+
+resources:
+  # Log Analytics Workspace
+  - type: Microsoft.OperationalInsights/workspaces
+    apiVersion: 2021-12-01-preview
+    name: '[concat(''logs-'', variables(''fullEnvironmentName''))]'
+    location: '[parameters(''location'')]'
+    properties:
+      sku:
+        name: PerGB2018
+      retentionInDays: 30
+
+  # Container Apps Environment
+  - type: Microsoft.App/managedEnvironments
+    apiVersion: 2022-03-01
+    name: '[variables(''fullEnvironmentName'')]'
+    location: '[parameters(''location'')]'
+    dependsOn:
+      - '[resourceId(''Microsoft.OperationalInsights/workspaces'', concat(''logs-'', variables(''fullEnvironmentName'')))]'
+    properties:
+      appLogsConfiguration:
+        destination: log-analytics
+        logAnalyticsConfiguration:
+          customerId: '[reference(resourceId(''Microsoft.OperationalInsights/workspaces'', concat(''logs-'', variables(''fullEnvironmentName'')))).customerId]'
+          sharedKey: '[listKeys(resourceId(''Microsoft.OperationalInsights/workspaces'', concat(''logs-'', variables(''fullEnvironmentName''))), ''2021-12-01-preview'').primarySharedKey]'
+
+  # MCP Server Container App
+  - type: Microsoft.App/containerApps
+    apiVersion: 2022-03-01
+    name: '[variables(''fullMcpAppName'')]'
+    location: '[parameters(''location'')]'
+    dependsOn:
+      - '[resourceId(''Microsoft.App/managedEnvironments'', variables(''fullEnvironmentName''))]'
+    properties:
+      managedEnvironmentId: '[resourceId(''Microsoft.App/managedEnvironments'', variables(''fullEnvironmentName''))]'
+      configuration:
+        activeRevisionsMode: Single
+        ingress:
+          external: true
+          targetPort: 8001
+          transport: http
+          allowInsecure: false
+        secrets:
+          - name: azure-openai-api-key
+            value: '[parameters(''azureOpenAIApiKey'')]'
+          - name: google-api-key
+            value: '[parameters(''googleApiKey'')]'
+          - name: patents-view-api-key
+            value: '[parameters(''patentsViewApiKey'')]'
+          - name: secret-key
+            value: '[parameters(''secretKey'')]'
+      template:
+        containers:
+          - name: mcp-server
+            image: '[concat(parameters(''containerRegistryName''), ''.azurecr.io/novitai-patent-mcp:'', parameters(''environment''))]'
+            env:
+              - name: ENVIRONMENT
+                value: '[parameters(''environment'')]'
+              - name: FASTAPI_HOST
+                value: 0.0.0.0
+              - name: FASTAPI_PORT
+                value: '8001'
+              - name: AZURE_OPENAI_API_KEY
+                secretRef: azure-openai-api-key
+              - name: AZURE_OPENAI_ENDPOINT
+                value: '[parameters(''azureOpenAIEndpoint'')]'
+              - name: GOOGLE_API_KEY
+                secretRef: google-api-key
+              - name: GOOGLE_CSE_ID
+                value: '[parameters(''googleCSEId'')]'
+              - name: PATENTSVIEW_API_KEY
+                secretRef: patents-view-api-key
+              - name: SECRET_KEY
+                secretRef: secret-key
+              - name: ALLOWED_ORIGINS
+                value: '["*"]'
+            resources:
+              cpu: 1.0
+              memory: 2Gi
+            probes:
+              - type: Liveness
+                httpGet:
+                  path: /health
+                  port: 8001
+                initialDelaySeconds: 30
+                periodSeconds: 30
+              - type: Readiness
+                httpGet:
+                  path: /health
+                  port: 8001
+                initialDelaySeconds: 10
+                periodSeconds: 10
+        scale:
+          minReplicas: 1
+          maxReplicas: 10
+          rules:
+            - name: http-requests
+              http:
+                metadata:
+                  concurrentRequests: 100
+
+outputs:
+  mcpUrl:
+    type: string
+    value: '[concat(''https://'', variables(''fullMcpAppName''), ''.'', variables(''fullEnvironmentName''), ''.azurecontainerapps.io'')]'
+
+
+
+

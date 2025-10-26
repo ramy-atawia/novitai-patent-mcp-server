@@ -1,0 +1,90 @@
+# Prior Art Search Report
+
+## Executive Summary
+
+**Invention Overview**: {user_query}
+
+**Search Methodology**: Comprehensive prior art search using PatentsView API with multiple search strategies
+
+**Key Findings**: {conversation_context}
+
+## Search Strategy and Results
+
+**Search Queries Used**:
+{conversation_context}
+
+**Total Patents Found**: [Number of patents found]
+
+## Detailed Patent Analysis
+
+### Top Patents (Most Relevant)
+
+[For each patent, provide:]
+
+#### Patent [ID]: [Title]
+- **Inventors**: [Inventor names]
+- **Assignee**: [Assignee organization]
+- **Filing Date**: [Date]
+- **Abstract**: [Brief abstract]
+- **Key Technical Features**: [2-3 key features]
+- **Relevance Score**: [HIGH/MEDIUM/LOW]
+- **Risk Assessment**: [Potential conflicts or design-around opportunities]
+
+### Innovation Summaries
+
+[For all patents, provide 2-3 sentence summaries focusing on:]
+- Technical approach and key innovations
+- Potential relevance to the invention
+- Key differences from the invention
+
+## Claim Analysis (Top 3 Patents Only)
+
+### Patent [ID] - Claim Analysis
+**Independent Claims**: [Analysis of main claims]
+**Dependent Claims**: [Analysis of dependent claims]
+**Technical Scope**: [Scope and limitations]
+**Potential Conflicts**: [Specific claim conflicts]
+
+## Risk Assessment
+
+### High Risk Issues
+- [List any high-risk prior art that could invalidate claims]
+
+### Medium Risk Issues
+- [List medium-risk prior art that could affect patentability]
+
+### Low Risk Issues
+- [List low-risk prior art for reference]
+
+## Strategic Recommendations
+
+### Immediate Actions
+1. [Specific actions to take based on findings]
+2. [Additional searches needed]
+3. [Claim modifications to consider]
+
+### Long-term Strategy
+1. [Patent prosecution strategy]
+2. [Design-around opportunities]
+3. [Competitive landscape considerations]
+
+## Technical Field Analysis
+
+**Primary Classification**: [CPC codes and technical field]
+**Related Technologies**: [Related technical areas]
+**Emerging Trends**: [Recent developments in the field]
+
+## Conclusion
+
+[Summary of key findings and recommendations for patent prosecution]
+
+---
+
+**Report Generated**: [Timestamp]
+**Search Database**: PatentsView API
+**Analysis Framework**: 35 USC 102/103
+**Confidence Level**: [HIGH/MEDIUM/LOW]
+
+
+
+
