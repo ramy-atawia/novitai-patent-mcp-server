@@ -20,10 +20,19 @@ Usage:
 """
 
 import asyncio
+import logging
+import json
 from typing import Optional, Dict, Any, List
 from fastmcp import FastMCP, Context
 from pydantic import BaseModel, Field
 from typing import Annotated
+
+# Set up verbose logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Import your existing services
 from app.services.web_search_service import WebSearchService
@@ -31,7 +40,7 @@ from app.services.patent_search_service import PatentSearchService
 from app.services.claim_drafting_service import ClaimDraftingService
 from app.services.claim_analysis_service import ClaimAnalysisService
 
-# Create FastMCP server
+# Create FastMCP server with debug logging
 mcp = FastMCP(
     name="Novitai Patent MCP Server",
     version="1.0.0",
@@ -47,6 +56,9 @@ mcp = FastMCP(
     All tools are powered by Azure OpenAI and real-time API integrations.
     """
 )
+
+# Note: FastMCP doesn't support before_request middleware
+# We'll add logging to individual tool functions instead
 
 
 # ============================================================================
@@ -69,6 +81,7 @@ async def web_search(
     
     Returns markdown-formatted search results.
     """
+    logger.info(f"Web search called with query='{query}', max_results={max_results}, ctx={ctx}")
     if ctx:
         await ctx.info(f"Starting web search for query: {query}")
     
@@ -99,6 +112,7 @@ async def web_search(
             return f"# Web Search Results for: {query}\n\nNo search results found."
     
     except Exception as e:
+        logger.error(f"Web search failed: {str(e)}", exc_info=True)
         if ctx:
             await ctx.error(f"Web search failed: {str(e)}")
         return f"# Web Search Error\n\n**Error**: {str(e)}"

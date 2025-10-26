@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements files
-COPY requirements-fixed.txt requirements-fastmcp-fixed.txt ./
+# Copy requirements file
+COPY requirements.txt ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements-fixed.txt -r requirements-fastmcp-fixed.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY . .
@@ -28,7 +28,9 @@ EXPOSE 8003
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8003/mcp || exit 1
+    CMD curl -f -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" \
+    -X POST -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"healthcheck","version":"1.0"}},"id":1}' \
+    http://localhost:8003/mcp || exit 1
 
 # Run the FastMCP server
 CMD ["python", "fastmcp_server.py"]
