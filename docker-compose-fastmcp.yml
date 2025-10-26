@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Original MCP Server (keeping it for comparison)
+  novitai-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novitai-patent-mcp-server
+    ports:
+      - "8001:8001"
+    environment:
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+      - GOOGLE_PATENT_CSE_ID=${GOOGLE_PATENT_CSE_ID}
+      - PATENTSVIEW_API_KEY=${PATENTSVIEW_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  # FastMCP Server (new FastMCP-enhanced version)
+  novitai-fastmcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastmcp
+    container_name: novitai-patent-fastmcp-server
+    ports:
+      - "8003:8003"
+    environment:
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+      - GOOGLE_PATENT_CSE_ID=${GOOGLE_PATENT_CSE_ID}
+      - PATENTSVIEW_API_KEY=${PATENTSVIEW_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  logs:
+
