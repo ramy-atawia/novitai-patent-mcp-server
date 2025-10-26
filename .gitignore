@@ -23,6 +23,7 @@ MANIFEST
 
 # Virtual Environment
 venv/
+venv311/
 env/
 ENV/
 env.bak/
@@ -106,3 +107,11 @@ dmypy.json
 
 # Docker
 .dockerignore
+
+# Temporary/Debug files
+debug_test.py
+simple_debug.py
+comprehensive_test.py
+validate_fastmcp.py
+gitrelated
+*.code-workspace
