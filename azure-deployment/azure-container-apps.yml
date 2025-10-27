@@ -1,5 +1,5 @@
-# Azure Container Apps deployment configuration
-# Deploy: az deployment group create --resource-group <rg> --template-file azure-container-apps.yml --parameters @parameters.json
+# Azure Container Apps deployment configuration for FastMCP Server
+# Deploy: az deployment group create --resource-group <rg> --template-file azure-container-apps-fastmcp.yml --parameters @parameters.fastmcp.json
 
 apiVersion: 2021-03-01
 kind: Template
@@ -28,6 +28,9 @@ parameters:
     type: securestring
   azureOpenAIEndpoint:
     type: string
+  azureOpenAIDeploymentName:
+    type: string
+    defaultValue: gpt-4
   googleApiKey:
     type: securestring
   googleCSEId:
@@ -68,7 +71,7 @@ resources:
           customerId: '[reference(resourceId(''Microsoft.OperationalInsights/workspaces'', concat(''logs-'', variables(''fullEnvironmentName'')))).customerId]'
           sharedKey: '[listKeys(resourceId(''Microsoft.OperationalInsights/workspaces'', concat(''logs-'', variables(''fullEnvironmentName''))), ''2021-12-01-preview'').primarySharedKey]'
 
-  # MCP Server Container App
+  # FastMCP Server Container App
   - type: Microsoft.App/containerApps
     apiVersion: 2022-03-01
     name: '[variables(''fullMcpAppName'')]'
@@ -81,7 +84,7 @@ resources:
         activeRevisionsMode: Single
         ingress:
           external: true
-          targetPort: 8001
+          targetPort: 8003
           transport: http
           allowInsecure: false
         secrets:
@@ -100,14 +103,16 @@ resources:
             env:
               - name: ENVIRONMENT
                 value: '[parameters(''environment'')]'
-              - name: FASTAPI_HOST
-                value: 0.0.0.0
-              - name: FASTAPI_PORT
-                value: '8001'
+              - name: PORT
+                value: '8003'
               - name: AZURE_OPENAI_API_KEY
                 secretRef: azure-openai-api-key
               - name: AZURE_OPENAI_ENDPOINT
                 value: '[parameters(''azureOpenAIEndpoint'')]'
+              - name: AZURE_OPENAI_DEPLOYMENT_NAME
+                value: '[parameters(''azureOpenAIDeploymentName'')]'
+              - name: AZURE_OPENAI_API_VERSION
+                value: '2024-02-15-preview'
               - name: GOOGLE_API_KEY
                 secretRef: google-api-key
               - name: GOOGLE_CSE_ID
@@ -116,8 +121,8 @@ resources:
                 secretRef: patents-view-api-key
               - name: SECRET_KEY
                 secretRef: secret-key
-              - name: ALLOWED_ORIGINS
-                value: '["*"]'
+              - name: LOG_LEVEL
+                value: 'INFO'
             resources:
               cpu: 1.0
               memory: 2Gi
@@ -125,13 +130,13 @@ resources:
               - type: Liveness
                 httpGet:
                   path: /health
-                  port: 8001
+                  port: 8003
                 initialDelaySeconds: 30
                 periodSeconds: 30
               - type: Readiness
                 httpGet:
                   path: /health
-                  port: 8001
+                  port: 8003
                 initialDelaySeconds: 10
                 periodSeconds: 10
         scale:
@@ -147,7 +152,4 @@ outputs:
   mcpUrl:
     type: string
     value: '[concat(''https://'', variables(''fullMcpAppName''), ''.'', variables(''fullEnvironmentName''), ''.azurecontainerapps.io'')]'
-
-
-
 

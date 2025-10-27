@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "East US 2"
+    },
+    "resourceGroupName": {
+      "value": "novitai-patent-mcp-rg"
+    },
+    "containerAppsEnvironmentName": {
+      "value": "novitai-patent-mcp-env"
+    },
+    "mcpAppName": {
+      "value": "novitai-patent-mcp"
+    },
+    "containerRegistryName": {
+      "value": "novitaiacr"
+    },
+    "azureOpenAIApiKey": {
+      "value": "your-azure-openai-api-key-here"
+    },
+    "azureOpenAIEndpoint": {
+      "value": "https://your-resource.openai.azure.com/"
+    },
+    "azureOpenAIDeploymentName": {
+      "value": "gpt-4"
+    },
+    "googleApiKey": {
+      "value": "your-google-api-key-here"
+    },
+    "googleCSEId": {
+      "value": "your-google-cse-id-here"
+    },
+    "patentsViewApiKey": {
+      "value": "your-patentsview-api-key-here"
+    },
+    "secretKey": {
+      "value": "your-secret-key-here-32-characters-minimum"
+    }
+  }
+}
+

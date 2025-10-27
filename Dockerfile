@@ -33,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     http://localhost:8003/mcp || exit 1
 
 # Run the FastMCP server
-CMD ["python", "fastmcp_server.py"]
+CMD ["python", "mcp_server.py"]
