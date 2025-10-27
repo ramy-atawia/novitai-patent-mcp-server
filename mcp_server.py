@@ -122,17 +122,12 @@ async def web_search(
 # Tool 2: Prior Art Search Tool
 # ============================================================================
 
-class PriorArtSearchParams(BaseModel):
-    """Parameters for prior art search"""
-    query: Annotated[str, Field(description="Search query describing the invention or technology", min_length=3, max_length=1000)]
-    context: Optional[str] = Field(None, description="Additional context from document or conversation")
-    conversation_history: Optional[str] = Field(None, description="Conversation history for context")
-    max_results: Annotated[int, Field(default=20, ge=1, le=100)] = 20
-
-
 @mcp.tool
 async def prior_art_search(
-    params: PriorArtSearchParams,
+    query: Annotated[str, Field(description="Search query describing the invention or technology", min_length=3, max_length=1000)],
+    max_results: Annotated[int, Field(default=20, ge=1, le=100, description="Maximum number of results to return")] = 20,
+    context: Annotated[Optional[str], Field(None, description="Additional context from document or conversation")] = None,
+    conversation_history: Annotated[Optional[str], Field(None, description="Conversation history for context")] = None,
     ctx: Context = None
 ) -> str:
     """
@@ -147,17 +142,17 @@ async def prior_art_search(
     Returns detailed prior art analysis report.
     """
     if ctx:
-        await ctx.info(f"Starting prior art search for: {params.query}")
+        await ctx.info(f"Starting prior art search for: {query}")
     
     try:
         # Use existing service (PatentSearchService doesn't use async context manager)
         patent_service = PatentSearchService()
         
         search_result, generated_queries = await patent_service.search_patents(
-            query=params.query,
-            context=params.context,
-            conversation_history=params.conversation_history,
-            max_results=params.max_results
+            query=query,
+            context=context,
+            conversation_history=conversation_history,
+            max_results=max_results
         )
         
         if ctx:
@@ -168,24 +163,17 @@ async def prior_art_search(
     except ValueError as e:
         if ctx:
             await ctx.error(f"Prior art search validation error: {str(e)}")
-        return f"# Prior Art Search Report\n\n**Query**: {params.query}\n\n**Error**: {str(e)}"
+        return f"# Prior Art Search Report\n\n**Query**: {query}\n\n**Error**: {str(e)}"
     
     except Exception as e:
         if ctx:
             await ctx.error(f"Prior art search failed: {str(e)}")
-        return f"# Prior Art Search Report\n\n**Query**: {params.query}\n\n**Error**: An unexpected error occurred. {str(e)}"
+        return f"# Prior Art Search Report\n\n**Query**: {query}\n\n**Error**: An unexpected error occurred. {str(e)}"
 
 
 # ============================================================================
 # Tool 3: Claim Drafting Tool
 # ============================================================================
-
-class ClaimDraftingParams(BaseModel):
-    """Parameters for claim drafting"""
-    user_query: Annotated[str, Field(description="Description of the invention or feature to draft claims for", min_length=10)]
-    context: Optional[str] = Field(None, description="Additional context from document")
-    conversation_history: Optional[str] = Field(None, description="Conversation history for context")
-
 
 @mcp.tool
 async def claim_drafting(
@@ -235,17 +223,6 @@ async def claim_drafting(
 class Claim(BaseModel):
     """A single patent claim"""
     claim_text: Annotated[str, Field(description="The text of the patent claim")]
-
-
-class ClaimAnalysisParams(BaseModel):
-    """Parameters for claim analysis"""
-    claims: Annotated[list[Claim], Field(description="List of claims to analyze", min_length=1)]
-    analysis_type: Annotated[str, Field(
-        description="Type of analysis: 'basic' for general analysis, 'detailed' for in-depth analysis",
-        default="basic"
-    )]
-    focus_areas: Annotated[List[str], Field(default=[], description="Specific areas to focus analysis on")]
-    context: Optional[str] = Field(None, description="Additional context for analysis")
 
 
 @mcp.tool
