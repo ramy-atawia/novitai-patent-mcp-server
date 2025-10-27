@@ -49,24 +49,47 @@ The server is built using:
 
 4. **Run the server**
    ```bash
-   python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
+   python mcp_server.py
    ```
 
 5. **Test the server**
    ```bash
-   curl http://localhost:8001/health
+   # Health check
+   curl http://localhost:8003/health
+   
+   # MCP endpoint
+   curl http://localhost:8003/mcp
    ```
 
 ### Docker Deployment
 
 1. **Build the Docker image**
    ```bash
-   docker build -t novitai-patent-mcp .
+   docker build -t novitai-mcp-server:local .
    ```
 
 2. **Run the container**
    ```bash
-   docker run -p 8001:8001 --env-file .env novitai-patent-mcp
+   docker run -d --name novitai-mcp-docker -p 8003:8003 --env-file .env novitai-mcp-server:local
+   ```
+
+3. **Test the server**
+   ```bash
+   # For local clients
+   curl http://localhost:8003/health
+   
+   # For clients inside Docker containers
+   curl http://host.docker.internal:8003/mcp
+   ```
+
+4. **Check logs**
+   ```bash
+   docker logs novitai-mcp-docker
+   ```
+
+5. **Stop the container**
+   ```bash
+   docker stop novitai-mcp-docker && docker rm novitai-mcp-docker
    ```
 
 ### Azure Container Apps Deployment
@@ -97,15 +120,21 @@ The server is built using:
 - `GOOGLE_API_KEY`: Google Custom Search API key
 - `GOOGLE_CSE_ID`: Google Custom Search Engine ID
 - `PATENTSVIEW_API_KEY`: PatentsView API key
-- `FASTAPI_HOST`: Server host (default: 0.0.0.0)
-- `FASTAPI_PORT`: Server port (default: 8001)
+- `PORT`: Server port (default: 8003)
+- `LOG_LEVEL`: Logging level (default: INFO)
 
 ## MCP Protocol
 
 The server implements the Model Context Protocol (MCP) specification and provides the following endpoints:
 
-- `POST /mcp`: Main MCP protocol endpoint
+- `POST /mcp`: Main MCP protocol endpoint (Streamable HTTP)
 - `GET /health`: Health check endpoint
+
+### Connection URLs
+
+- **Local access**: `http://localhost:8003/mcp`
+- **Docker-internal access**: `http://host.docker.internal:8003/mcp`
+- **Azure deployment**: `https://your-app.azurecontainerapps.io/mcp`
 
 ### Available Tools
 
