@@ -201,14 +201,15 @@ async def claim_drafting(
         async with ClaimDraftingService() as drafting_service:
                 draft_result = await drafting_service.draft_claims(
                     user_query=user_query,
-                    conversation_context=context,
-                    document_reference=conversation_history
+                    conversation_context=conversation_history,  # Map conversation_history to conversation_context
+                    document_reference=context  # Map context to document_reference
                 )
         
         if ctx:
             await ctx.info("Claim drafting completed successfully")
         
-        return draft_result[0]  # Return just the report, not the tuple
+        # Return the drafting_report string from the result dict
+        return draft_result[0].get("drafting_report", "Error: No drafting report generated")
     
     except Exception as e:
         if ctx:
@@ -269,7 +270,9 @@ async def claim_analysis(
         if ctx:
             await ctx.info("Claim analysis completed successfully")
         
-        return analysis_result[0]  # Return just the report, not the tuple
+        # Return the analysis_report string from the result dict
+        result_dict = analysis_result[0]
+        return result_dict.get("analysis_report", f"# Claim Analysis\n\nAnalyzed {result_dict.get('claims_analyzed', 0)} claims")
     
     except Exception as e:
         if ctx:
