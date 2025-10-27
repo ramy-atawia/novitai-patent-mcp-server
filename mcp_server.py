@@ -189,7 +189,9 @@ class ClaimDraftingParams(BaseModel):
 
 @mcp.tool
 async def claim_drafting(
-    params: ClaimDraftingParams,
+    user_query: Annotated[str, Field(description="Description of the invention or feature to draft claims for", min_length=10)],
+    context: Annotated[Optional[str], Field(None, description="Additional context from document")] = None,
+    conversation_history: Annotated[Optional[str], Field(None, description="Conversation history for context")] = None,
     ctx: Context = None
 ) -> str:
     """
@@ -204,15 +206,15 @@ async def claim_drafting(
     Returns AI-generated patent claims in proper format.
     """
     if ctx:
-        await ctx.info(f"Starting claim drafting for: {params.user_query[:100]}...")
+        await ctx.info(f"Starting claim drafting for: {user_query[:100]}...")
     
     try:
         # Use existing service with async context manager
         async with ClaimDraftingService() as drafting_service:
                 draft_result = await drafting_service.draft_claims(
-                    user_query=params.user_query,
-                    conversation_context=params.context,
-                    document_reference=params.conversation_history
+                    user_query=user_query,
+                    conversation_context=context,
+                    document_reference=conversation_history
                 )
         
         if ctx:
@@ -248,7 +250,13 @@ class ClaimAnalysisParams(BaseModel):
 
 @mcp.tool
 async def claim_analysis(
-    params: ClaimAnalysisParams,
+    claims: Annotated[List[Claim], Field(description="List of claims to analyze", min_length=1)],
+    analysis_type: Annotated[str, Field(
+        description="Type of analysis: 'basic' for general analysis, 'detailed' for in-depth analysis",
+        default="basic"
+    )] = "basic",
+    focus_areas: Annotated[List[str], Field(default=[], description="Specific areas to focus analysis on")] = None,
+    context: Annotated[Optional[str], Field(None, description="Additional context for analysis")] = None,
     ctx: Context = None
 ) -> str:
     """
@@ -263,19 +271,22 @@ async def claim_analysis(
     
     Returns comprehensive claim analysis report.
     """
+    if focus_areas is None:
+        focus_areas = []
+    
     if ctx:
-        await ctx.info(f"Starting claim analysis for {len(params.claims)} claims")
+        await ctx.info(f"Starting claim analysis for {len(claims)} claims")
     
     try:
         # Use existing service with async context manager
         async with ClaimAnalysisService() as analysis_service:
             # Convert Pydantic models to dict format expected by service
-            claims_list = [{"claim_text": claim.claim_text} for claim in params.claims]
+            claims_list = [{"claim_text": claim.claim_text} for claim in claims]
             
             analysis_result = await analysis_service.analyze_claims(
                 claims=claims_list,
-                analysis_type=params.analysis_type,
-                focus_areas=params.focus_areas
+                analysis_type=analysis_type,
+                focus_areas=focus_areas
             )
         
         if ctx:
