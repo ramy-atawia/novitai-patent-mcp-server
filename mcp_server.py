@@ -125,9 +125,7 @@ async def web_search(
 @mcp.tool
 async def prior_art_search(
     query: Annotated[str, Field(description="Search query describing the invention or technology", min_length=3, max_length=1000)],
-    max_results: Annotated[int, Field(default=20, ge=1, le=100, description="Maximum number of results to return")] = 20,
     context: Annotated[Optional[str], Field(None, description="Additional context from document or conversation")] = None,
-    conversation_history: Annotated[Optional[str], Field(None, description="Conversation history for context")] = None,
     ctx: Context = None
 ) -> str:
     """
@@ -151,8 +149,8 @@ async def prior_art_search(
         search_result, generated_queries = await patent_service.search_patents(
             query=query,
             context=context,
-            conversation_history=conversation_history,
-            max_results=max_results
+            conversation_history=None,
+            max_results=20
         )
         
         if ctx:
@@ -179,7 +177,6 @@ async def prior_art_search(
 async def claim_drafting(
     user_query: Annotated[str, Field(description="Description of the invention or feature to draft claims for", min_length=10)],
     context: Annotated[Optional[str], Field(None, description="Additional context from document")] = None,
-    conversation_history: Annotated[Optional[str], Field(None, description="Conversation history for context")] = None,
     ctx: Context = None
 ) -> str:
     """
@@ -201,8 +198,8 @@ async def claim_drafting(
         async with ClaimDraftingService() as drafting_service:
                 draft_result = await drafting_service.draft_claims(
                     user_query=user_query,
-                    conversation_context=conversation_history,  # Map conversation_history to conversation_context
-                    document_reference=context  # Map context to document_reference
+                    conversation_context=None,
+                    document_reference=context
                 )
         
         if ctx:
@@ -229,11 +226,6 @@ class Claim(BaseModel):
 @mcp.tool
 async def claim_analysis(
     claims: Annotated[List[Claim], Field(description="List of claims to analyze", min_length=1)],
-    analysis_type: Annotated[str, Field(
-        description="Type of analysis: 'basic' for general analysis, 'detailed' for in-depth analysis",
-        default="basic"
-    )] = "basic",
-    focus_areas: Annotated[List[str], Field(default=[], description="Specific areas to focus analysis on")] = None,
     context: Annotated[Optional[str], Field(None, description="Additional context for analysis")] = None,
     ctx: Context = None
 ) -> str:
@@ -249,9 +241,6 @@ async def claim_analysis(
     
     Returns comprehensive claim analysis report.
     """
-    if focus_areas is None:
-        focus_areas = []
-    
     if ctx:
         await ctx.info(f"Starting claim analysis for {len(claims)} claims")
     
@@ -263,8 +252,8 @@ async def claim_analysis(
             
             analysis_result = await analysis_service.analyze_claims(
                 claims=claims_list,
-                analysis_type=analysis_type,
-                focus_areas=focus_areas
+                analysis_type="comprehensive",
+                focus_areas=[]
             )
         
         if ctx:
