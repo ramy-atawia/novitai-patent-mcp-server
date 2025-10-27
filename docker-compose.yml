@@ -34,11 +34,11 @@ services:
       - mcp-network
 
   # FastMCP Server (new FastMCP-enhanced version)
-  novitai-fastmcp-server:
+  novitai-mcp-server-fast:
     build:
       context: .
-      dockerfile: Dockerfile.fastmcp
-    container_name: novitai-patent-fastmcp-server
+      dockerfile: Dockerfile
+    container_name: novitai-patent-mcp-fast
     ports:
       - "8003:8003"
     environment:
